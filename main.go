@@ -8,6 +8,7 @@ import (
 )
 
 func main() {
+	fmt.Println("empty")
 	title, body, assignee := handleOptions()
 
 	prUrl := createPullRequest(title, body)
