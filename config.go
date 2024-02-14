@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gopkg.in/yaml.v3"
 	"os"
+	"path/filepath"
 )
 
 const configFileName = "gh-createpr-configuration.yml"
@@ -13,12 +14,20 @@ type Config struct {
 	Assignee  string   `yaml:"assignee"`
 }
 
+func getConfigFileName() string {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		panic(err)
+	}
+	return filepath.Join(homeDir, configFileName)
+}
+
 func updateConfig(config *Config) error {
 	yamlData, err := yaml.Marshal(config)
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(configFileName, yamlData, 0644)
+	err = os.WriteFile(getConfigFileName(), yamlData, 0644)
 	if err != nil {
 		return err
 	}
@@ -26,7 +35,7 @@ func updateConfig(config *Config) error {
 }
 
 func loadFile() ([]byte, error) {
-	file, err := os.ReadFile(configFileName)
+	file, err := os.ReadFile(getConfigFileName())
 	if err != nil {
 		if os.IsNotExist(err) {
 			fmt.Println("Config file not found. Creating a new one.")
@@ -67,7 +76,7 @@ func createDefaultConfig() error {
 		return err
 	}
 
-	err = os.WriteFile(configFileName, yamlData, 0644)
+	err = os.WriteFile(getConfigFileName(), yamlData, 0644)
 	if err != nil {
 		return err
 	}
