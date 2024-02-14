@@ -15,53 +15,52 @@ var (
 	listReviewersFlag  bool
 	addReviewerFlag    string
 	removeReviewerFlag string
+	updateAssignee     string
 )
 
 func handleOptions() (string, string, string) {
-	titleFlag := flag.String("title", "", "Pull Request title")
-	bodyFlag := flag.String("body", "", "Pull Request body")
-	listConfigsFlag := flag.Bool("list", false, "List configs")
-	listReviewersFlag := flag.Bool("list-reviewers", false, "List configs")
-	addReviewerFlag := flag.String("add-reviewer", "", "Add reviewer")
-	removeReviewerFlag := flag.String("remove-reviewer", "", "Remove reviewer")
-	updateAssignee := flag.String("assignee", "@me", "Assignee")
+	flag.StringVar(&titleFlag, "title", "", "Pull Request title")
+	flag.StringVar(&bodyFlag, "body", "", "Pull Request body")
+	flag.BoolVar(&listConfigsFlag, "list", false, "List configs")
+	flag.BoolVar(&listReviewersFlag, "list-reviewers", false, "List reviewers")
+	flag.StringVar(&addReviewerFlag, "add-reviewer", "", "Add reviewer")
+	flag.StringVar(&removeReviewerFlag, "remove-reviewer", "", "Remove reviewer")
+	flag.StringVar(&updateAssignee, "assignee", "", "Assignee")
 	flag.Parse()
 
-	if *listConfigsFlag {
+	if listConfigsFlag {
 		listConfigs()
 		os.Exit(0)
 	}
 
-	if *listReviewersFlag {
+	if listReviewersFlag {
 		listReviewers()
 		os.Exit(0)
 	}
 
-	if *addReviewerFlag != "" {
-		addReviewer(*addReviewerFlag)
+	if addReviewerFlag != "" {
+		addReviewer(addReviewerFlag)
 		os.Exit(0)
 	}
 
-	if *removeReviewerFlag != "" {
-		removeReviewer(*removeReviewerFlag)
+	if removeReviewerFlag != "" {
+		removeReviewer(removeReviewerFlag)
 		os.Exit(0)
 	}
 
-	if *updateAssignee != "@me" {
-		updateAssigneeConfig(*updateAssignee)
-	} else {
-		updateAssigneeConfig("@me")
+	if updateAssignee != "" {
+		updateAssigneeConfig(updateAssignee)
 	}
 
-	if *titleFlag == "" {
-		*titleFlag = getUserInput("Enter Pull Request Title: ")
+	if titleFlag == "" {
+		titleFlag = getUserInput("Enter Pull Request Title: ")
 	}
 
-	if *bodyFlag == "" {
-		*bodyFlag = getUserInput("Enter Pull Request Body: ")
+	if bodyFlag == "" {
+		bodyFlag = getUserInput("Enter Pull Request Body: ")
 	}
 
-	return *titleFlag, *bodyFlag, *updateAssignee
+	return titleFlag, bodyFlag, updateAssignee
 }
 
 func updateAssigneeConfig(assignee string) {
