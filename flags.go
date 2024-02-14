@@ -52,7 +52,6 @@ func handleOptions() (string, string, string) {
 		os.Exit(0)
 	} else {
 		updateAssigneeConfig("@me")
-		os.Exit(0)
 	}
 
 	if *titleFlag == "" {
