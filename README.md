@@ -26,6 +26,7 @@ $ gh createpr
 * `--title <string>`: Title of the pull request.
 * `--body <string>`: Body of the pull request.
 * `--add-reviewer`: Add reviewer to the pull request.
+* `--assignee <string>`: Assignee of the pull request.
 * `--remove-reviewer`: Remove reviewer from the pull request.
 * `--list`: List all configuartions for the cli tool.
 * `--list-reviewers`: List reviewers of the pull request.
