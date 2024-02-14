@@ -10,12 +10,10 @@ const configFileName = "gh-createpr-configuration.yml"
 
 type Config struct {
 	Reviewers []string `yaml:"reviewers"`
+	Assignee  string   `yaml:"assignee"`
 }
 
-func updateConfig(reviewers []string) error {
-	config := Config{
-		Reviewers: reviewers,
-	}
+func updateConfig(config *Config) error {
 	yamlData, err := yaml.Marshal(config)
 	if err != nil {
 		return err
@@ -60,6 +58,7 @@ func loadConfig() (*Config, error) {
 func createDefaultConfig() error {
 	config := Config{
 		Reviewers: []string{},
+		Assignee:  "@me",
 	}
 
 	yamlData, err := yaml.Marshal(config)

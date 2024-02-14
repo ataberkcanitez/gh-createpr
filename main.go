@@ -8,13 +8,15 @@ import (
 )
 
 func main() {
-	title, body := handleOptions()
+	title, body, assignee := handleOptions()
 
 	prUrl := createPullRequest(title, body)
 	fmt.Println("Pull Request created:", prUrl)
 	fmt.Println("Adding reviewers...")
 	addReviewerToPullRequest(prUrl)
 	fmt.Println("Reviewers added.")
+	addAssignee(prUrl, assignee)
+
 }
 
 func getUserInput(prompt string) string {

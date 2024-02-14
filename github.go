@@ -41,3 +41,16 @@ func addReviewerToPullRequest(prUrl string) {
 		return
 	}
 }
+
+func addAssignee(url, assignee string) {
+	fmt.Println("Adding assignee... to", url, "assignee:", assignee)
+	_, stdErr, err := gh.Exec("pr", "edit", url, "--add-assignee", assignee)
+	if err != nil {
+		fmt.Println("Error:", err)
+		if stdErr.Len() > 0 {
+			fmt.Println(stdErr.String())
+		}
+		return
+	}
+
+}
