@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/cli/go-gh/v2"
+	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
 	"os"
 	"strings"
@@ -14,15 +15,21 @@ type Config struct {
 	Reviewers []string `yaml:"reviewers"`
 }
 
-const configFileName = ".config/gh-createpr/gh-createpr-configuration.yml"
+const configFileName = "gh-createpr-configuration.yml"
 
 func main() {
 	titleFlag := flag.String("title", "", "Pull Request title")
 	bodyFlag := flag.String("body", "", "Pull Request body")
-	listReviewersFlag := flag.Bool("list", false, "List configs")
+	listConfigsFlag := flag.Bool("list", false, "List configs")
+	listReviewersFlag := flag.Bool("list-reviewers", false, "List configs")
 	addReviewerFlag := flag.String("add-reviewer", "", "Add reviewer")
 	removeReviewerFlag := flag.String("remove-reviewer", "", "Remove reviewer")
 	flag.Parse()
+
+	if *listConfigsFlag {
+		listConfigs()
+		os.Exit(0)
+	}
 
 	if *listReviewersFlag {
 		listReviewers()
@@ -54,6 +61,15 @@ func main() {
 	fmt.Println("Reviewers added.")
 }
 
+func listConfigs() {
+	file, err := loadFile()
+	if err != nil {
+		fmt.Println("Error reading config file: ", err)
+		os.Exit(1)
+	}
+	fmt.Println(string(file))
+}
+
 func addReviewerToPullRequest(prUrl string) {
 	reviewers, err := readReviewersFromConfig()
 	if err != nil {
@@ -61,15 +77,29 @@ func addReviewerToPullRequest(prUrl string) {
 		fmt.Println("Error reading config file: ", err)
 		os.Exit(1)
 	}
+
+	args := []string{"pr", "edit", prUrl}
 	for _, reviewer := range reviewers {
-		gh.Exec("pr", "edit", prUrl, "--add-reviewer", reviewer)
+		args = append(args, "--add-reviewer", reviewer)
+	}
+
+	_, stdErr, err := gh.Exec(args...)
+	if err != nil {
+		fmt.Println("Error:", err)
+		if stdErr.Len() > 0 {
+			fmt.Println(stdErr.String())
+		}
+		return
 	}
 }
 
 func createPullRequest(title, body string) string {
-	url, _, err := gh.Exec("pr", "create", "--title", title, "--body", body)
+	url, stdErr, err := gh.Exec("pr", "create", "--title", title, "--body", body)
 	if err != nil {
 		fmt.Println("Error:", err)
+		if stdErr.Len() > 0 {
+			fmt.Println("Detail:", stdErr.String())
+		}
 		os.Exit(1)
 	}
 	return strings.TrimSpace(url.String())
@@ -90,6 +120,11 @@ func removeReviewer(reviewerToRemove string) {
 	reviewers, err := readReviewersFromConfig()
 	if err != nil {
 		fmt.Println("Error reading config file: ", err)
+		os.Exit(1)
+	}
+
+	if !slices.Contains(reviewers, reviewerToRemove) {
+		fmt.Printf("Reviewer %s not found.\n", reviewerToRemove)
 		os.Exit(1)
 	}
 
@@ -147,7 +182,12 @@ func listReviewers() {
 		os.Exit(1)
 	}
 
-	fmt.Println(reviewers)
+	ymlData, err := yaml.Marshal(reviewers)
+	if err != nil {
+		fmt.Println("Error marshalling reviewers: ", err)
+		os.Exit(1)
+	}
+	fmt.Println(string(ymlData))
 }
 
 func readReviewersFromConfig() ([]string, error) {
@@ -159,8 +199,8 @@ func readReviewersFromConfig() ([]string, error) {
 	return config.Reviewers, nil
 }
 
-func loadConfig() (*Config, error) {
-	content, err := os.ReadFile(configFileName)
+func loadFile() ([]byte, error) {
+	file, err := os.ReadFile(configFileName)
 	if err != nil {
 		if os.IsNotExist(err) {
 			fmt.Println("Config file not found. Creating a new one.")
@@ -168,13 +208,22 @@ func loadConfig() (*Config, error) {
 			if err != nil {
 				return nil, err
 			}
-			return loadConfig()
+			return loadFile()
 		}
+		return nil, err
+	}
+	return file, err
+
+}
+
+func loadConfig() (*Config, error) {
+	file, err := loadFile()
+	if err != nil {
 		return nil, err
 	}
 
 	var config Config
-	err = yaml.Unmarshal(content, &config)
+	err = yaml.Unmarshal(file, &config)
 	if err != nil {
 		return nil, err
 	}
