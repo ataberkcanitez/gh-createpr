@@ -43,6 +43,16 @@ func addReviewerToPullRequest(prUrl string) {
 	}
 }
 
+func getLastCommitMessage() string {
+	cmd := exec.Command("git", "log", "-1", "--pretty=%B")
+	output, err := cmd.Output()
+	if err != nil {
+		fmt.Println("Error getting last commit message:", err)
+		os.Exit(1)
+	}
+	return strings.TrimSpace(string(output))
+}
+
 func addAssignee(url, assignee string) {
 	fmt.Printf("Adding assignee as %s...", assignee)
 	_, stdErr, err := gh.Exec("pr", "edit", url, "--add-assignee", assignee)
@@ -53,14 +63,5 @@ func addAssignee(url, assignee string) {
 		}
 		return
 	}
-}
-
-func getLastCommitMessage() string {
-	cmd := exec.Command("git", "log", "-1", "--pretty=%B")
-	output, err := cmd.Output()
-	if err != nil {
-		fmt.Println("Error getting last commit message:", err)
-		os.Exit(1)
-	}
-	return strings.TrimSpace(string(output))
+	fmt.Println("Assignee added.")
 }
