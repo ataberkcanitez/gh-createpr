@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/cli/go-gh/v2"
 	"os"
+	"os/exec"
 	"strings"
 )
 
@@ -43,7 +44,7 @@ func addReviewerToPullRequest(prUrl string) {
 }
 
 func addAssignee(url, assignee string) {
-	fmt.Println("Adding assignee...")
+	fmt.Println("Adding assignee as ", assignee, "...")
 	_, stdErr, err := gh.Exec("pr", "edit", url, "--add-assignee", assignee)
 	if err != nil {
 		fmt.Println("Error:", err)
@@ -52,5 +53,14 @@ func addAssignee(url, assignee string) {
 		}
 		return
 	}
+}
 
+func getLastCommitMessage() string {
+	cmd := exec.Command("git", "log", "-1", "--pretty=%B")
+	output, err := cmd.Output()
+	if err != nil {
+		fmt.Println("Error getting last commit message:", err)
+		os.Exit(1)
+	}
+	return strings.TrimSpace(string(output))
 }
