@@ -53,13 +53,18 @@ func handleOptions() (string, string, string) {
 	}
 
 	if titleFlag == "" {
-		titleFlag = getUserInput("Enter Pull Request Title: ")
+		message := getLastCommitMessage()
+		titleFlag = getUserInputWithSuggestion("Enter Pull Request Title: ", message)
 	}
 
 	if bodyFlag == "" {
 		bodyFlag = getUserInput("Enter Pull Request Body: ")
 	}
 
+	fmt.Print("creating PR with title: ", titleFlag)
+	if bodyFlag != "" {
+		fmt.Println(" and body: ", bodyFlag)
+	}
 	return titleFlag, bodyFlag, updateAssignee
 }
 

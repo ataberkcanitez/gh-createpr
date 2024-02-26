@@ -9,6 +9,9 @@ import (
 
 func main() {
 	title, body, assignee := handleOptions()
+	if title != "" {
+		panic("title should be empty")
+	}
 
 	prUrl := createPullRequest(title, body)
 	fmt.Println("Pull Request created:", prUrl)
@@ -28,4 +31,21 @@ func getUserInput(prompt string) string {
 		os.Exit(1)
 	}
 	return strings.TrimSpace(input)
+}
+func getUserInputWithSuggestion(prompt, suggestion string) string {
+	fmt.Print(prompt)
+	if suggestion != "" {
+		fmt.Printf(" (press Enter to use suggested value, or write new one: %s)", suggestion)
+	}
+	fmt.Print(": ")
+
+	reader := bufio.NewReader(os.Stdin)
+	userInput, _ := reader.ReadString('\n')
+
+	userInput = strings.TrimSpace(userInput)
+	if userInput == "" {
+		return suggestion
+	}
+
+	return userInput
 }
