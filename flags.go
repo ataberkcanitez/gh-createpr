@@ -48,18 +48,26 @@ func handleOptions() (string, string, string) {
 		os.Exit(0)
 	}
 
+	fmt.Println(updateAssignee)
 	if updateAssignee != "" {
 		updateAssigneeConfig(updateAssignee)
 	}
+	updateAssignee = getAssigneeFromConfig()
 
 	if titleFlag == "" {
-		titleFlag = getUserInput("Enter Pull Request Title: ")
+		message := getLastCommitMessage()
+		titleFlag = getUserInputWithSuggestion("Enter Pull Request Title: ", message)
 	}
 
 	if bodyFlag == "" {
 		bodyFlag = getUserInput("Enter Pull Request Body: ")
 	}
 
+	fmt.Printf("creating PR with title: [%s] ", titleFlag)
+	if bodyFlag != "" {
+		fmt.Println(" and body: ", bodyFlag)
+	}
+	fmt.Println()
 	return titleFlag, bodyFlag, updateAssignee
 }
 
@@ -71,6 +79,15 @@ func updateAssigneeConfig(assignee string) {
 	}
 	config.Assignee = assignee
 	updateConfig(config)
+}
+
+func getAssigneeFromConfig() string {
+	config, err := loadConfig()
+	if err != nil {
+		fmt.Println("Error reading config file: ", err)
+		os.Exit(1)
+	}
+	return config.Assignee
 }
 
 func removeReviewer(reviewerToRemove string) {
