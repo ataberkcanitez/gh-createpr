@@ -19,8 +19,6 @@ var (
 )
 
 func handleOptions() (string, string, string) {
-	flag.StringVar(&titleFlag, "title", "", "Pull Request title")
-	flag.StringVar(&bodyFlag, "body", "", "Pull Request body")
 	flag.BoolVar(&listConfigsFlag, "list", false, "List configs")
 	flag.BoolVar(&listReviewersFlag, "list-reviewers", false, "List reviewers")
 	flag.StringVar(&addReviewerFlag, "add-reviewer", "", "Add reviewer")
@@ -48,20 +46,14 @@ func handleOptions() (string, string, string) {
 		os.Exit(0)
 	}
 
-	fmt.Println(updateAssignee)
 	if updateAssignee != "" {
 		updateAssigneeConfig(updateAssignee)
 	}
 	updateAssignee = getAssigneeFromConfig()
 
-	if titleFlag == "" {
-		message := getLastCommitMessage()
-		titleFlag = getUserInputWithSuggestion("Enter Pull Request Title: ", message)
-	}
-
-	if bodyFlag == "" {
-		bodyFlag = getUserInput("Enter Pull Request Body: ")
-	}
+	message := getLastCommitMessage()
+	titleFlag = getUserInputWithSuggestion("Enter Pull Request Title: ", message)
+	bodyFlag = getUserInput("Enter Pull Request Body Or Press Enter Leave it empty: ")
 
 	fmt.Printf("creating PR with title: [%s] ", titleFlag)
 	if bodyFlag != "" {
