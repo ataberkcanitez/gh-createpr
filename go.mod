@@ -1,6 +1,6 @@
 module gh-createpr
 
-go 1.25.4
+go 1.25.0
 
 require (
 	github.com/cli/go-gh/v2 v2.13.0
