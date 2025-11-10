@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/cli/go-gh/v2"
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/cli/go-gh/v2"
 )
 
 func createPullRequest(title, body string) string {
