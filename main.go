@@ -8,8 +8,8 @@ import (
 )
 
 func main() {
-	title, body, assignee := handleOptions()
-	prUrl := createPullRequest(title, body)
+	title, body, assignee, targetBranch := handleOptions()
+	prUrl := createPullRequest(title, body, targetBranch)
 	fmt.Println("Pull Request created:", prUrl)
 	fmt.Println("Adding reviewers...")
 	addReviewerToPullRequest(prUrl)

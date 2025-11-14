@@ -3,9 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
+
 	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
-	"os"
 )
 
 var (
@@ -16,14 +17,16 @@ var (
 	addReviewerFlag    string
 	removeReviewerFlag string
 	updateAssignee     string
+	setTargetBranch    string
 )
 
-func handleOptions() (string, string, string) {
+func handleOptions() (string, string, string, string) {
 	flag.BoolVar(&listConfigsFlag, "list", false, "List configs")
 	flag.BoolVar(&listReviewersFlag, "list-reviewers", false, "List reviewers")
 	flag.StringVar(&addReviewerFlag, "add-reviewer", "", "Add reviewer")
 	flag.StringVar(&removeReviewerFlag, "remove-reviewer", "", "Remove reviewer")
 	flag.StringVar(&updateAssignee, "assignee", "", "Assignee")
+	flag.StringVar(&setTargetBranch, "set-target-branch", "", "Set target branch for PRs")
 	flag.Parse()
 
 	if listConfigsFlag {
@@ -46,10 +49,17 @@ func handleOptions() (string, string, string) {
 		os.Exit(0)
 	}
 
+	if setTargetBranch != "" {
+		setTargetBranchConfig(setTargetBranch)
+		os.Exit(0)
+	}
+
 	if updateAssignee != "" {
 		updateAssigneeConfig(updateAssignee)
 	}
 	updateAssignee = getAssigneeFromConfig()
+
+	targetBranch := getTargetBranchFromConfig()
 
 	message := getLastCommitMessage()
 	titleFlag = getUserInputWithSuggestion("Enter Pull Request Title: ", message)
@@ -60,7 +70,7 @@ func handleOptions() (string, string, string) {
 		fmt.Println(" and body: ", bodyFlag)
 	}
 	fmt.Println()
-	return titleFlag, bodyFlag, updateAssignee
+	return titleFlag, bodyFlag, updateAssignee, targetBranch
 }
 
 func updateAssigneeConfig(assignee string) {
@@ -70,7 +80,11 @@ func updateAssigneeConfig(assignee string) {
 		os.Exit(1)
 	}
 	config.Assignee = assignee
-	updateConfig(config)
+	err = updateConfig(config)
+	if err != nil {
+		fmt.Println("Error updating config file: ", err)
+		os.Exit(1)
+	}
 }
 
 func getAssigneeFromConfig() string {
@@ -158,4 +172,13 @@ func addReviewer(newReviewer string) {
 	}
 
 	fmt.Printf("Reviewer %s added.\n", newReviewer)
+}
+
+func setTargetBranchConfig(targetBranch string) {
+	err := updateTargetBranchConfig(targetBranch)
+	if err != nil {
+		fmt.Println("Error updating config file: ", err)
+		os.Exit(1)
+	}
+	fmt.Printf("Target branch set to: %s\n", targetBranch)
 }

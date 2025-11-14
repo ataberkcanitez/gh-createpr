@@ -20,14 +20,29 @@ After installing the extension, please execute following command to use:
 $ gh createpr
 ```
 
+#### Setting Target Branch
+
+You can configure a default target branch for your pull requests. This is useful when you frequently create PRs against a specific branch (e.g., `develop`, `staging`):
+
+```bash
+# Set the default target branch
+$ gh createpr --set-target-branch develop
+
+# Create a PR - it will automatically target the configured branch
+$ gh createpr
+```
+
+If no target branch is configured, the pull request will use GitHub's default base branch for the repository.
+
 ### Options
 
 * `-h --help`: Show help for command.
 * `--title <string>`: Title of the pull request.
 * `--body <string>`: Body of the pull request.
-* `--add-reviewer`: Add reviewer to the pull request.
+* `--add-reviewer <string>`: Add reviewer to the pull request.
 * `--assignee <string>`: Assignee of the pull request.
-* `--remove-reviewer`: Remove reviewer from the pull request.
+* `--remove-reviewer <string>`: Remove reviewer from the pull request.
+* `--set-target-branch <string>`: Set the default target branch for pull requests.
 * `--list`: List all configuartions for the cli tool.
 * `--list-reviewers`: List reviewers of the pull request.
 

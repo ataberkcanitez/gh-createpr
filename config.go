@@ -2,16 +2,18 @@ package main
 
 import (
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
+
+	"gopkg.in/yaml.v3"
 )
 
 const configFileName = "gh-createpr-configuration.yml"
 
 type Config struct {
-	Reviewers []string `yaml:"reviewers"`
-	Assignee  string   `yaml:"assignee"`
+	Reviewers    []string `yaml:"reviewers"`
+	Assignee     string   `yaml:"assignee"`
+	TargetBranch string   `yaml:"target_branch,omitempty"`
 }
 
 func getConfigFileName() string {
@@ -66,8 +68,9 @@ func loadConfig() (*Config, error) {
 
 func createDefaultConfig() error {
 	config := Config{
-		Reviewers: []string{},
-		Assignee:  "@me",
+		Reviewers:    []string{},
+		Assignee:     "@me",
+		TargetBranch: "",
 	}
 
 	yamlData, err := yaml.Marshal(config)
@@ -91,4 +94,21 @@ func readReviewersFromConfig() ([]string, error) {
 	}
 
 	return config.Reviewers, nil
+}
+
+func getTargetBranchFromConfig() string {
+	config, err := loadConfig()
+	if err != nil {
+		return ""
+	}
+	return config.TargetBranch
+}
+
+func updateTargetBranchConfig(targetBranch string) error {
+	config, err := loadConfig()
+	if err != nil {
+		return err
+	}
+	config.TargetBranch = targetBranch
+	return updateConfig(config)
 }

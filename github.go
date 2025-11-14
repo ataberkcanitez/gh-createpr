@@ -9,8 +9,14 @@ import (
 	"github.com/cli/go-gh/v2"
 )
 
-func createPullRequest(title, body string) string {
-	url, stdErr, err := gh.Exec("pr", "create", "--title", title, "--body", body)
+func createPullRequest(title, body, targetBranch string) string {
+	args := []string{"pr", "create", "--title", title, "--body", body}
+
+	if targetBranch != "" {
+		args = append(args, "--base", targetBranch)
+	}
+
+	url, stdErr, err := gh.Exec(args...)
 	if err != nil {
 		fmt.Println("Error:", err)
 		if stdErr.Len() > 0 {
