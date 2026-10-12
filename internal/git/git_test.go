@@ -78,7 +78,29 @@ func TestBranchCommitsUsesBaseRange(t *testing.T) {
 	}
 }
 
-func TestBranchCommitsFallsBackToRecentCommits(t *testing.T) {
+// A configured target branch that does not exist in this repository (e.g. a
+// global "dev" setting used in a repo that only has "main") must still show
+// only the branch's own commits.
+func TestBranchCommitsMissingBaseUsesDefaultBranch(t *testing.T) {
+	f := &fakeRunner{
+		refs: map[string]bool{"origin/main": true},
+		logs: map[string]string{
+			"origin/main..HEAD": record("h2", "mine"),
+			"":                  record("h2", "mine") + record("h1", "unrelated"),
+		},
+	}
+	c := &Client{Run: f.run}
+
+	commits, err := c.BranchCommits("dev", 10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(commits) != 1 || commits[0].Subject != "mine" {
+		t.Errorf("commits = %+v", commits)
+	}
+}
+
+func TestBranchCommitsUnresolvableBaseOffersOnlyLatest(t *testing.T) {
 	f := &fakeRunner{
 		logs: map[string]string{"": record("h1", "latest") + record("h0", "older")},
 	}
@@ -88,7 +110,7 @@ func TestBranchCommitsFallsBackToRecentCommits(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(commits) != 2 || commits[0].Subject != "latest" {
+	if len(commits) != 1 || commits[0].Subject != "latest" {
 		t.Errorf("commits = %+v", commits)
 	}
 }

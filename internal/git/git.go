@@ -67,38 +67,34 @@ func (c *Client) LatestCommit() (Commit, error) {
 }
 
 // BranchCommits returns up to limit commits, newest first, that are on HEAD but
-// not on base. The first element is always HEAD. When base cannot be resolved
-// locally, or HEAD has no commits ahead of it, the latest limit commits are
-// returned instead so the caller always has a suggestion.
+// not on base. The first element is always HEAD. When base is empty or not
+// found locally, the repository's default branch is used instead. When no base
+// can be resolved, or HEAD has no commits ahead of it, only HEAD is returned.
 func (c *Client) BranchCommits(base string, limit int) ([]Commit, error) {
-	n := fmt.Sprintf("-%d", limit)
 	if ref := c.resolveBase(base); ref != "" {
-		if commits, err := c.log(n, ref+"..HEAD"); err == nil && len(commits) > 0 {
+		if commits, err := c.log(fmt.Sprintf("-%d", limit), ref+"..HEAD"); err == nil && len(commits) > 0 {
 			return commits, nil
 		}
 	}
-	commits, err := c.log(n)
+	latest, err := c.LatestCommit()
 	if err != nil {
 		return nil, err
 	}
-	if len(commits) == 0 {
-		return nil, fmt.Errorf("no commits found")
-	}
-	return commits, nil
+	return []Commit{latest}, nil
 }
 
 // resolveBase finds a local ref for the base branch, preferring the remote
-// tracking branch. It returns "" when nothing matches.
+// tracking branch, then falls back to the default branch. It returns "" when
+// nothing matches.
 func (c *Client) resolveBase(base string) string {
 	var candidates []string
 	if base != "" {
-		candidates = []string{"origin/" + base, base}
-	} else {
-		if head, err := c.Run("symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD"); err == nil {
-			candidates = append(candidates, strings.TrimSpace(head))
-		}
-		candidates = append(candidates, "origin/main", "origin/master", "main", "master")
+		candidates = append(candidates, "origin/"+base, base)
 	}
+	if head, err := c.Run("symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD"); err == nil {
+		candidates = append(candidates, strings.TrimSpace(head))
+	}
+	candidates = append(candidates, "origin/main", "origin/master", "main", "master")
 	for _, ref := range candidates {
 		if ref == "" {
 			continue
