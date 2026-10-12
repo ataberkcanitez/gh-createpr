@@ -1,47 +1,35 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"os"
-	"strings"
+
+	"gh-createpr/internal/app"
+	"gh-createpr/internal/config"
+	"gh-createpr/internal/git"
+	"gh-createpr/internal/github"
+	"gh-createpr/internal/ui"
 )
 
 func main() {
-	title, body, assignee, targetBranch := handleOptions()
-	prUrl := createPullRequest(title, body, targetBranch)
-	fmt.Println("Pull Request created:", prUrl)
-	fmt.Println("Adding reviewers...")
-	addReviewerToPullRequest(prUrl)
-	fmt.Println("Reviewers added.")
-	addAssignee(prUrl, assignee)
-
+	os.Exit(run())
 }
 
-func getUserInput(prompt string) string {
-	fmt.Println(prompt)
-	reader := bufio.NewReader(os.Stdin)
-	input, err := reader.ReadString('\n')
+func run() int {
+	io := ui.System()
+
+	path, err := config.DefaultPath()
 	if err != nil {
-		fmt.Println("Error reading input: ", err)
-		os.Exit(1)
-	}
-	return strings.TrimSpace(input)
-}
-func getUserInputWithSuggestion(prompt, suggestion string) string {
-	fmt.Println(prompt)
-	if suggestion != "" {
-		fmt.Printf("Suggested title: [%s]\npress Enter to use suggested value, or write new one", suggestion)
-	}
-	fmt.Print(": ")
-
-	reader := bufio.NewReader(os.Stdin)
-	userInput, _ := reader.ReadString('\n')
-
-	userInput = strings.TrimSpace(userInput)
-	if userInput == "" {
-		return suggestion
+		fmt.Fprintln(io.ErrOut, "Error:", err)
+		return 1
 	}
 
-	return userInput
+	a := &app.App{
+		IO:       io,
+		Prompter: io.Prompter(),
+		Config:   &config.Store{Path: path, Out: io.Out},
+		Git:      git.NewClient(),
+		GitHub:   github.NewClient(),
+	}
+	return a.Run(os.Args[0], os.Args[1:])
 }
