@@ -17,7 +17,7 @@ import (
 // maxCommitChoices limits how many commits are offered as title suggestions.
 const maxCommitChoices = 15
 
-// customTitleOption is the last entry of the commit picker.
+// customTitleOption is the first entry of the commit picker.
 const customTitleOption = "Write my own title"
 
 // CommitSource lists commits that can be used as title suggestions.
@@ -238,19 +238,20 @@ func (a *App) askTitle(base string) (string, error) {
 	suggestion := commits[0].Subject
 	if a.IO.Interactive && len(commits) > 1 {
 		options := make([]string, 0, len(commits)+1)
+		options = append(options, customTitleOption)
 		for _, c := range commits {
 			options = append(options, c.ShortHash()+"  "+c.Subject)
 		}
-		options = append(options, customTitleOption)
 
-		i, err := a.Prompter.Select("Which commit should the title come from?", options[0], options)
+		// The cursor starts on the latest commit, so Enter keeps the old default.
+		i, err := a.Prompter.Select("Which commit should the title come from?", options[1], options)
 		if err != nil {
 			return "", err
 		}
-		if i < len(commits) {
-			suggestion = commits[i].Subject
-		} else {
+		if i == 0 {
 			suggestion = ""
+		} else {
+			suggestion = commits[i-1].Subject
 		}
 	}
 

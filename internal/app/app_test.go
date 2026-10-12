@@ -21,8 +21,8 @@ type fakePrompter struct {
 	asked   []string
 }
 
-func (p *fakePrompter) Select(prompt, _ string, options []string) (int, error) {
-	p.asked = append(p.asked, "select: "+strings.Join(options, " / "))
+func (p *fakePrompter) Select(prompt, defaultValue string, options []string) (int, error) {
+	p.asked = append(p.asked, fmt.Sprintf("select: %s [%s]", strings.Join(options, " / "), defaultValue))
 	if len(p.selects) == 0 {
 		return 0, errors.New("unexpected select")
 	}
@@ -152,7 +152,7 @@ func TestNonInteractiveSuggestsLatestCommit(t *testing.T) {
 
 func TestInteractivePickOlderCommit(t *testing.T) {
 	h := newHarness(t, true, "reviewers: []\nassignee: '@me'\ntarget_branch: develop\n")
-	h.prompt.selects = []int{1}
+	h.prompt.selects = []int{2}
 	h.prompt.inputs = []string{"", "Some body"}
 
 	if code := h.run(); code != 0 {
@@ -164,7 +164,7 @@ func TestInteractivePickOlderCommit(t *testing.T) {
 	if h.git.base != "develop" {
 		t.Errorf("commits compared against %q, want develop", h.git.base)
 	}
-	if want := "select: 2222222  AT: Execute go mod tidy / 1111111  AT: Real job done / " + customTitleOption; h.prompt.asked[0] != want {
+	if want := "select: " + customTitleOption + " / 2222222  AT: Execute go mod tidy / 1111111  AT: Real job done [2222222  AT: Execute go mod tidy]"; h.prompt.asked[0] != want {
 		t.Errorf("picker = %q, want %q", h.prompt.asked[0], want)
 	}
 	if h.gh.reviewers != nil {
@@ -174,7 +174,7 @@ func TestInteractivePickOlderCommit(t *testing.T) {
 
 func TestInteractiveCustomTitle(t *testing.T) {
 	h := newHarness(t, true, "reviewers: []\nassignee: ''\n")
-	h.prompt.selects = []int{2}
+	h.prompt.selects = []int{0}
 	h.prompt.inputs = []string{"Hand written", ""}
 
 	if code := h.run(); code != 0 {
